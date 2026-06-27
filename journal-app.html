@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:       #1a1a1a;
+    --ink-muted: #6b6b6b;
+    --paper:     #faf9f6;
+    --paper-2:   #f2f0eb;
+    --rule:      #e0ddd6;
+    --accent:    #3d6b4f;
+    --accent-lt: #e8f0ea;
+    --danger:    #b94040;
+    --danger-lt: #fbeaea;
+    --card-bg:   #ffffff;
+    --shadow:    0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+    --radius:    6px;
+    --serif:     'Lora', Georgia, serif;
+    --sans:      'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .logo { font-family: var(--serif); font-size: 1.25rem; letter-spacing: .01em; }
+  header .logo span { color: #7fba96; }
+
+  .api-bar {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+    padding: .55rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .8rem;
+    color: var(--ink-muted);
+  }
+  .api-bar input {
+    flex: 1;
+    max-width: 340px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: .3rem .6rem;
+    font: inherit;
+    font-size: .8rem;
+    background: #fff;
+    color: var(--ink);
+  }
+  .api-bar input:focus { outline: 2px solid var(--accent); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; transition: background .3s; }
+  .dot.online { background: #4caf50; }
+  .dot.offline { background: #f44336; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .page-title { font-family: var(--serif); font-size: 2rem; font-weight: 600; margin-bottom: .25rem; }
+  .page-sub { color: var(--ink-muted); font-size: .875rem; margin-bottom: 2rem; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--rule);
+    margin-bottom: 1.5rem;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: .6rem 1.2rem;
+    font: 500 .875rem var(--sans);
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--ink); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .form-card h2 {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .field { margin-bottom: 1rem; }
+  label { display: block; font-size: .78rem; font-weight: 500; color: var(--ink-muted); margin-bottom: .3rem; letter-spacing: .04em; text-transform: uppercase; }
+  input[type=text], textarea {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: .6rem .85rem;
+    font: inherit;
+    font-size: .9rem;
+    background: var(--paper);
+    color: var(--ink);
+    transition: border-color .2s, box-shadow .2s;
+    resize: vertical;
+  }
+  input[type=text]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-lt);
+    background: #fff;
+  }
+  textarea { min-height: 100px; }
+  .form-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+
+  /* ── Buttons ── */
+  .btn {
+    font: 500 .85rem/1 var(--sans);
+    padding: .55rem 1.15rem;
+    border-radius: var(--radius);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #2e5239; }
+  .btn-outline { background: transparent; color: var(--ink); border-color: var(--rule); }
+  .btn-outline:hover { background: var(--paper-2); }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-danger:hover { background: #943232; }
+  .btn-ghost { background: transparent; color: var(--accent); border-color: transparent; padding: .4rem .6rem; font-size: .8rem; }
+  .btn-ghost:hover { background: var(--accent-lt); }
+  .btn-sm { padding: .38rem .75rem; font-size: .78rem; }
+
+  /* ── Search by ID ── */
+  .search-card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-card h2 { font-family: var(--serif); font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+  .search-row { display: flex; gap: .6rem; align-items: flex-end; }
+  .search-row .field { flex: 1; margin-bottom: 0; }
+
+  /* ── Search result ── */
+  .search-result {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.25rem;
+    display: none;
+  }
+  .search-result.visible { display: block; }
+  .search-result-inner {
+    background: var(--accent-lt);
+    border: 1px solid #b8d4bf;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+  .search-result-inner .sr-title { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; margin-bottom: .25rem; }
+  .search-result-inner .sr-id { font-size: .7rem; color: var(--ink-muted); font-family: monospace; margin-bottom: .75rem; }
+  .search-result-inner .sr-content { font-size: .9rem; color: #333; line-height: 1.7; white-space: pre-wrap; }
+  .search-result-inner .sr-actions { margin-top: 1rem; display: flex; gap: .5rem; }
+  .search-not-found {
+    background: var(--danger-lt);
+    border: 1px solid #e0b0b0;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: .875rem;
+    color: var(--danger);
+  }
+
+  /* ── Toast ── */
+  #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: .5rem; }
+  .toast {
+    background: var(--ink);
+    color: #fff;
+    padding: .65rem 1.1rem;
+    border-radius: var(--radius);
+    font-size: .82rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    animation: slideIn .25s ease;
+    max-width: 300px;
+  }
+  .toast.success { border-left: 3px solid #4caf50; }
+  .toast.error   { border-left: 3px solid #f44336; }
+  @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+
+  /* ── List header ── */
+  .list-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+  .list-header h2 { font-family: var(--serif); font-size: 1.2rem; }
+  .count-badge {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    padding: .2rem .65rem;
+    font-size: .75rem;
+    color: var(--ink-muted);
+  }
+  .list-header .btn-ghost { margin-left: auto; }
+
+  .journal-list { display: flex; flex-direction: column; gap: .85rem; }
+
+  /* ── Journal card ── */
+  .journal-card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color .2s;
+    overflow: hidden;
+  }
+  .journal-card:hover { border-color: #c5c0b6; }
+  .journal-card.editing { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lt); }
+
+  /* Card header row — always visible, clickable to expand */
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    gap: 1rem;
+    user-select: none;
+  }
+  .card-header:hover { background: var(--paper); }
+  .card-chevron {
+    font-size: .7rem;
+    color: var(--ink-muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .journal-card.open .card-chevron { transform: rotate(180deg); }
+
+  .card-header-text { flex: 1; min-width: 0; }
+  .card-title { font-family: var(--serif); font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-preview { font-size: .8rem; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .1rem; }
+  .card-id { font-size: .68rem; color: var(--ink-muted); font-family: monospace; margin-top: .15rem; }
+
+  /* Expandable body */
+  .card-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease;
+  }
+  .journal-card.open .card-body { max-height: 1000px; }
+  .card-body-inner {
+    padding: 0 1.5rem 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  .card-content-full {
+    font-size: .9rem;
+    color: #333;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    padding: 1rem 0 .75rem;
+  }
+  .card-actions { display: flex; gap: .5rem; padding-top: .5rem; border-top: 1px solid var(--paper-2); }
+
+  /* ── Empty / skeleton ── */
+  .empty {
+    text-align: center;
+    padding: 3.5rem 2rem;
+    color: var(--ink-muted);
+    border: 2px dashed var(--rule);
+    border-radius: var(--radius);
+  }
+  .empty .empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .empty p { font-size: .9rem; }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--paper-2) 25%, #ebe9e3 50%, var(--paper-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 4px;
+    height: 14px;
+    margin-bottom: .5rem;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  @media(max-width: 600px) {
+    header { padding: 0 1rem; }
+    main { padding: 1.25rem 1rem 3rem; }
+    .api-bar { padding: .5rem 1rem; }
+    .search-row { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">my<span>journal</span></div>
+  <div style="font-size:.78rem;color:#aaa;font-family:var(--sans)">Spring Boot · MongoDB</div>
+</header>
+
+<div class="api-bar">
+  <div class="dot" id="status-dot"></div>
+  <span id="status-label">Connecting…</span>
+  <span style="margin-left:auto">Base URL:</span>
+  <input type="text" id="base-url" value="http://localhost:8080/journal" />
+  <button class="btn btn-outline" style="padding:.28rem .7rem;font-size:.75rem" onclick="checkStatus()">Ping</button>
+</div>
+
+<main>
+  <div class="page-title">Journal</div>
+  <p class="page-sub">Write, read, edit, and delete your journal entries.</p>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('write', this)">✏️ Write</button>
+    <button class="tab-btn" onclick="switchTab('search', this)">🔍 Find by ID</button>
+  </div>
+
+  <!-- Write tab -->
+  <div class="tab-panel active" id="tab-write">
+    <div class="form-card">
+      <h2><span id="form-title">New Entry</span></h2>
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="f-title" placeholder="What's on your mind?" />
+      </div>
+      <div class="field">
+        <label>Content</label>
+        <textarea id="f-content" placeholder="Write freely…"></textarea>
+      </div>
+      <input type="hidden" id="f-id" />
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="submitForm()">
+          <span id="submit-label">Save Entry</span>
+        </button>
+        <button class="btn btn-outline" id="cancel-btn" onclick="cancelEdit()" style="display:none">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search by ID tab -->
+  <div class="tab-panel" id="tab-search">
+    <div class="search-card">
+      <h2>Find entry by ID</h2>
+      <div class="search-row">
+        <div class="field">
+          <label>Entry ID</label>
+          <input type="text" id="search-id" placeholder="Paste a MongoDB ID e.g. 6847a3f2c…" />
+        </div>
+        <button class="btn btn-primary" onclick="searchById()" style="margin-bottom:0">Look up</button>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <!-- All entries list -->
+  <div class="list-header">
+    <h2>All Entries</h2>
+    <span class="count-badge" id="entry-count">—</span>
+    <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
+  </div>
+  <div class="journal-list" id="list"></div>
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  function baseUrl() { return $('base-url').value.trim().replace(/\/$/, ''); }
+
+  /* ── Tabs ── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-' + name).classList.add('active');
+  }
+
+  /* ── Status ── */
+  async function checkStatus() {
+    const dot = $('status-dot'), lbl = $('status-label');
+    lbl.textContent = 'Checking…'; dot.className = 'dot';
+    try {
+      const r = await fetch(baseUrl(), { signal: AbortSignal.timeout(4000) });
+      dot.className = r.ok ? 'dot online' : 'dot offline';
+      lbl.textContent = r.ok ? 'Connected' : `Status ${r.status}`;
+    } catch {
+      dot.className = 'dot offline';
+      lbl.textContent = 'Cannot reach server (check CORS / running?)';
+    }
+  }
+
+  /* ── Toast ── */
+  function toast(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`; t.textContent = msg;
+    $('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  /* ── Escape helpers ── */
+  function esc(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function esc2(s = '') { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+
+  /* ── Load all entries ── */
+  async function loadAll() {
+    const list = $('list');
+    list.innerHTML = skeletonHTML();
+    try {
+      const r = await fetch(baseUrl());
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      $('entry-count').textContent = `${data.length} ${data.length === 1 ? 'entry' : 'entries'}`;
+      renderList(data);
+    } catch (e) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Could not load entries.<br><small>${e.message}</small></p></div>`;
+      $('entry-count').textContent = '—';
+    }
+  }
+
+  function skeletonHTML() {
+    return Array.from({length:2}, () =>
+      `<div class="journal-card" style="padding:1rem 1.5rem">
+        <div class="skeleton" style="width:40%;height:15px;margin-bottom:.6rem"></div>
+        <div class="skeleton" style="width:75%"></div>
+        <div class="skeleton" style="width:55%"></div>
+      </div>`
+    ).join('');
+  }
+
+  function renderList(entries) {
+    if (!entries.length) {
+      $('list').innerHTML = `<div class="empty"><div class="empty-icon">📓</div><p>No entries yet. Write your first one above.</p></div>`;
+      return;
+    }
+    $('list').innerHTML = entries.map(e => cardHTML(e)).join('');
+  }
+
+  function cardHTML(e) {
+    const preview = (e.content || '').replace(/\n/g,' ').slice(0, 80) + ((e.content||'').length > 80 ? '…' : '');
+    return `
+    <div class="journal-card" id="card-${e.id}">
+      <div class="card-header" onclick="toggleCard('${e.id}')">
+        <div class="card-header-text">
+          <div class="card-title">${esc(e.title || '(Untitled)')}</div>
+          <div class="card-preview">${esc(preview || 'No content')}</div>
+          <div class="card-id">ID: ${esc(e.id)}</div>
+        </div>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body" id="body-${e.id}">
+        <div class="card-body-inner">
+          <div class="card-content-full">${esc(e.content || '')}</div>
+          <div class="card-actions">
+            <button class="btn btn-outline btn-sm" onclick="startEdit('${e.id}','${esc2(e.title)}','${esc2(e.content)}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntry('${e.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* ── Expand / collapse card ── */
+  function toggleCard(id) {
+    const card = $('card-' + id);
+    card.classList.toggle('open');
+  }
+
+  /* ── Search by ID ── */
+  async function searchById() {
+    const id = $('search-id').value.trim();
+    if (!id) { toast('Enter an ID to search.', 'error'); return; }
+    const result = $('search-result');
+    result.className = 'search-result visible';
+    result.innerHTML = `<div class="skeleton" style="width:60%;height:16px;margin-bottom:.5rem"></div><div class="skeleton" style="width:85%"></div>`;
+    try {
+      const r = await fetch(`${baseUrl()}/id/${encodeURIComponent(id)}`);
+      if (r.status === 404 || r.headers.get('content-length') === '0') throw new Error('not_found');
+      const text = await r.text();
+      if (!text || text === 'null') throw new Error('not_found');
+      const e = JSON.parse(text);
+      if (!e || !e.id) throw new Error('not_found');
+      result.innerHTML = `
+        <div class="search-result-inner">
+          <div class="sr-title">${esc(e.title || '(Untitled)')}</div>
+          <div class="sr-id">ID: ${esc(e.id)}</div>
+          <div class="sr-content">${esc(e.content || '')}</div>
+          <div class="sr-actions">
+            <button class="btn btn-outline btn-sm" onclick="startEdit('${e.id}','${esc2(e.title)}','${esc2(e.content)}');switchTab('write',document.querySelectorAll('.tab-btn')[0])">Edit this entry</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntry('${e.id}')">Delete</button>
+          </div>
+        </div>`;
+    } catch (e) {
+      if (e.message === 'not_found') {
+        result.innerHTML = `<div class="search-not-found">No entry found with that ID.</div>`;
+      } else {
+        result.innerHTML = `<div class="search-not-found">Error: ${esc(e.message)}</div>`;
+      }
+    }
+  }
+
+  /* Allow pressing Enter in the search field */
+  document.addEventListener('DOMContentLoaded', () => {
+    $('search-id').addEventListener('keydown', e => { if (e.key === 'Enter') searchById(); });
+    $('f-title').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-content').focus(); });
+  });
+
+  /* ── Create / Update form ── */
+  async function submitForm() {
+    const id = $('f-id').value.trim();
+    const title = $('f-title').value.trim();
+    const content = $('f-content').value.trim();
+    if (!title) { toast('Title is required.', 'error'); $('f-title').focus(); return; }
+    id ? await updateEntry(id, title, content) : await createEntry(title, content);
+  }
+
+  async function createEntry(title, content) {
+    try {
+      const r = await fetch(baseUrl(), {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ title, content })
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      toast('Entry saved ✓');
+      clearForm();
+      loadAll();
+    } catch (e) { toast(`Failed to create: ${e.message}`, 'error'); }
+  }
+
+  function startEdit(id, title, content) {
+    $('f-id').value = id;
+    $('f-title').value = title;
+    $('f-content').value = content.replace(/\\n/g, '\n');
+    $('form-title').textContent = 'Edit Entry';
+    $('submit-label').textContent = 'Update Entry';
+    $('cancel-btn').style.display = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    $('f-title').focus();
+    document.querySelectorAll('.journal-card').forEach(c => c.classList.remove('editing'));
+    const card = $('card-' + id);
+    if (card) card.classList.add('editing');
+  }
+
+  async function updateEntry(id, title, content) {
+    try {
+      const r = await fetch(`${baseUrl()}/id/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ title, content })
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      toast('Entry updated ✓');
+      cancelEdit();
+      loadAll();
+    } catch (e) { toast(`Failed to update: ${e.message}`, 'error'); }
+  }
+
+  function cancelEdit() {
+    clearForm();
+    document.querySelectorAll('.journal-card').forEach(c => c.classList.remove('editing'));
+  }
+
+  function clearForm() {
+    $('f-id').value = ''; $('f-title').value = ''; $('f-content').value = '';
+    $('form-title').textContent = 'New Entry';
+    $('submit-label').textContent = 'Save Entry';
+    $('cancel-btn').style.display = 'none';
+  }
+
+  /* ── Delete ── */
+  async function deleteEntry(id) {
+    if (!confirm('Delete this entry? This cannot be undone.')) return;
+    try {
+      const r = await fetch(`${baseUrl()}/id/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      toast('Entry deleted.');
+      $('search-result').className = 'search-result';
+      loadAll();
+    } catch (e) { toast(`Failed to delete: ${e.message}`, 'error'); }
+  }
+
+  /* ── Init ── */
+  checkStatus();
+  loadAll();
+</script>
+</body>
+</html>
